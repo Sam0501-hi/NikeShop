@@ -1,0 +1,61 @@
+﻿@model NikeShop.Models.Product
+
+@{
+    ViewData["Title"] = Model?.ProductName ?? "Chi tiết sản phẩm";
+}
+
+@if (Model == null)
+{
+    <div class="alert alert-warning mt-5">Sản phẩm không tồn tại!</div>
+}
+else
+{
+    <div class="card card-custom p-4 mt-5 border-0">
+        <div class="row">
+            <div class="col-md-5">
+                <img src="@(Model.Image?.StartsWith("http") == true ? Model.Image : Url.Content("~/images/" + Model.Image))"
+                     class="img-fluid" alt="@Model.ProductName"
+                     onerror="this.src='https://via.placeholder.com/500x500'"
+                     style="border-radius: 4px;">
+            </div>
+
+            <div class="col-md-7 ps-md-5">
+                <h2 class="fw-bold text-uppercase" style="letter-spacing: -1px;">@Model.ProductName</h2>
+                <p class="text-muted">Danh mục: @Model.Category?.CategoryName</p>
+                <h3 class="fw-bold my-3">@Model.Price.ToString("N0") VNĐ</h3>
+                <p class="mb-4">@Model.Description</p>
+
+                <form asp-controller="Cart" asp-action="AddToCart" method="post">
+                    <input type="hidden" name="productId" value="@Model.ProductId" />
+                    <input type="hidden" name="color" value="@Model.Color" />
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Màu sắc:</label>
+                        <div>
+                            <span class="badge bg-dark p-2 px-3 text-uppercase">@Model.Color</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Chọn Size:</label>
+                        <div class="btn-group d-flex flex-wrap" role="group" aria-label="Select Size">
+                            @foreach (var variant in Model.Variants.Where(v => v.StockQuantity > 0))
+                            {
+                                <input type="radio" class="btn-check" name="size" id="size_@variant.Size" value="@variant.Size" required>
+                                <label class="btn btn-outline-dark m-1" for="size_@variant.Size">@variant.Size</label>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Số lượng:</label>
+                        <input type="number" name="quantity" value="1" min="1" max="10"
+                               class="form-control w-25" style="border-radius: 4px;" />
+                    </div>
+
+                    <button type="submit" class="btn btn-custom btn-lg w-100">Thêm vào giỏ hàng</button>
+                </form>
+            </div>
+        </div>
+    </div>
+}

@@ -1,0 +1,44 @@
+﻿@model IEnumerable<NikeShop.Models.Product>
+
+@{
+    ViewData["Title"] = "Cửa hàng";
+    var categories = ViewBag.Categories as IEnumerable<NikeShop.Models.Category>;
+}
+
+<div class="row mt-4">
+    <div class="col-md-3 mb-4">
+        <div class="card card-custom p-3">
+            <h5 class="fw-bold text-custom mb-3">Danh mục</h5>
+            <div class="list-group list-group-flush">
+                <a asp-action="Index" class="list-group-item list-group-item-action border-0">Tất cả sản phẩm</a>
+                @if (categories != null)
+                {
+                    foreach (var cat in categories)
+                    {
+                        <a asp-action="Index" asp-route-categoryId="@cat.CategoryId" class="list-group-item list-group-item-action border-0">
+                            @cat.CategoryName
+                        </a>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="row">
+            @foreach (var item in Model)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card card-custom h-100 p-2">
+                        <img src="@(item.Image?.StartsWith("http") == true ? item.Image : Url.Content("~/images/" + item.Image))" class="img-fluid" alt="@item.ProductName" onerror="this.src='https://via.placeholder.com/400x400'">
+                            <div class="card-body d-flex flex-column text-center">
+                                <h6 class="card-title fw-bold">@item.ProductName</h6>
+                                <p class="text-danger mb-3">@item.Price.ToString("N0") VNĐ</p>
+                                <a asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-custom mt-auto w-100">Xem chi tiết</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
