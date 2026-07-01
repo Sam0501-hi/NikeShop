@@ -12,8 +12,8 @@ using NikeShop.Data;
 namespace NikeShop.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260630180408_AddNikeShopModels")]
-    partial class AddNikeShopModels
+    [Migration("20260701072221_InitFullDatabase")]
+    partial class InitFullDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

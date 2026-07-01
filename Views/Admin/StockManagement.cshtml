@@ -1,0 +1,37 @@
+﻿@model IEnumerable<NikeShop.Models.ViewModels.AdminProductStockViewModel>
+@{
+    Layout = "_AdminLayout";
+}
+<div class="container mt-5">
+    <h2 class="text-uppercase fw-bold mb-4">Quản lý Tồn kho</h2>
+    <table class="table border">
+        <thead class="table-dark">
+            <tr>
+                <th>Sản phẩm</th>
+                <th>Size</th>
+                <th>Số lượng hiện tại</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Model)
+            {
+                @foreach (var v in p.Variants)
+                {
+                    <tr>
+                        <td class="fw-bold align-middle">@p.ProductName</td>
+                        <td class="align-middle">@v.Size</td>
+                        <td>
+                            <form asp-action="UpdateStock" method="post" class="d-flex">
+                                <input type="hidden" name="variantId" value="@v.VariantId" />
+                                <input type="number" name="newQuantity" value="@v.StockQuantity" class="form-control w-50" />
+                                <button type="submit" class="btn btn-dark ms-2">Lưu</button>
+                            </form>
+                        </td>
+                        <td></td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

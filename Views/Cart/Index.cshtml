@@ -22,6 +22,7 @@
                         <th>Sản phẩm</th>
                         <th>Tên</th>
                         <th>Size</th>
+                        <th>Màu</th>
                         <th>Đơn giá</th>
                         <th>Số lượng</th>
                         <th>Thành tiền</th>
@@ -33,10 +34,25 @@
                     {
                         <tr>
                             <td>
-                                <img src="~/images/@item.Image" alt="@item.ProductName" style="width: 80px; border-radius: 8px;" onerror="this.src='https://via.placeholder.com/80x80'" />
+                             <img src="@(item.Image?.StartsWith("http") == true ? item.Image : Url.Content("~" + item.Image))"
+     class="img-fluid" alt="@item.ProductName"
+     onerror="this.src='https://via.placeholder.com/500x500'" style="border-radius: 4px;">
                             </td>
                             <td class="fw-bold">@item.ProductName</td>
                             <td>@item.Size</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.Color))
+                                {
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        <span class="rounded-circle border me-2" style="width:16px;height:16px;display:inline-block;background-color:@item.Color;"></span>
+                                        <span class="text-uppercase">@item.Color</span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Không có màu</span>
+                                }
+                            </td>
                             <td class="text-danger fw-bold">@item.Price.ToString("N0") đ</td>
                             <td>@item.Quantity</td>
                             <td class="text-danger fw-bold">@item.Total.ToString("N0") đ</td>

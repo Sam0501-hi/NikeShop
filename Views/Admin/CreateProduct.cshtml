@@ -1,0 +1,70 @@
+﻿@model NikeShop.Models.Product
+
+@{
+    ViewData["Title"] = "Thêm sản phẩm mới";
+}
+
+<div class="container mt-4">
+    <h2>Thêm sản phẩm mới</h2>
+    <form asp-action="CreateProduct" method="post" enctype="multipart/form-data" id="productForm">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label asp-for="ProductName" class="form-label">Tên sản phẩm</label>
+                    <input asp-for="ProductName" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Price" class="form-label">Giá</label>
+                    <input asp-for="Price" type="number" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Danh mục</label>
+                    <select asp-for="CategoryId" asp-items="@(new SelectList(ViewBag.Categories, "CategoryId", "CategoryName"))" class="form-select"></select>
+                </div>
+                <div class="mb-3">
+                <label class="form-label">Ảnh sản phẩm</label>
+                <input type="file" name="imageFile" class="form-control" accept="image/*" />
+            </div>
+            </div>
+
+            <div class="col-md-6">
+                <h5>Biến thể (Màu & Size)</h5>
+                <div id="variant-container"></div>
+                <button type="button" class="btn btn-outline-primary btn-sm mt-2" onclick="addVariant()">
+                    <i class="bi bi-plus"></i> Thêm biến thể
+                </button>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-success">Lưu sản phẩm</button>
+            <a asp-action="Products" class="btn btn-secondary">Quay lại</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        let variantCount = 0;
+        function addVariant() {
+            let container = document.getElementById('variant-container');
+            let html = `
+                <div class="row mb-2 border p-2 rounded variant-row">
+                    <div class="col-md-4">
+                        <input name="variants[${variantCount}].Color" class="form-control" placeholder="Màu" required />
+                    </div>
+                    <div class="col-md-3">
+                        <input name="variants[${variantCount}].Size" class="form-control" placeholder="Size" required />
+                    </div>
+                    <div class="col-md-3">
+                        <input name="variants[${variantCount}].StockQuantity" type="number" class="form-control" placeholder="SL" required />
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove()">X</button>
+                    </div>
+                </div>`;
+            container.insertAdjacentHTML('beforeend', html);
+            variantCount++;
+        }
+    </script>
+}

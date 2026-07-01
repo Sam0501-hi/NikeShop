@@ -3,100 +3,68 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Nike Shop</title>
+    <title>@ViewData["Title"] - NIKESHOP</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <style>
-        /* Phong cách Nike: Trắng, Đen, Tối giản, Thể thao */
-        body { 
-            background-color: #ffffff; 
-            color: #111111;
-        }
-        .text-custom { color: #111111 !important; }
-        .bg-custom { background-color: #111111 !important; }
-        
-        /* Nút bấm chuẩn Nike: góc cạnh, in hoa, đen trắng đảo ngược khi hover */
-        .btn-custom {
-            background-color: #111111;
-            border: 1px solid #111111;
-            color: #ffffff;
-            border-radius: 4px; /* Bo góc cực nhẹ */
-            padding: 10px 24px;
-            font-weight: 600;
-            text-transform: uppercase;
-            transition: all 0.3s ease;
-        }
-        .btn-custom:hover {
-            background-color: #ffffff;
-            color: #111111;
-        }
-        
-        .btn-outline-custom {
-            background-color: #ffffff;
-            border: 1px solid #111111;
-            color: #111111;
-            border-radius: 4px;
-            padding: 10px 24px;
-            font-weight: 600;
-            text-transform: uppercase;
-            transition: all 0.3s ease;
-        }
-        .btn-outline-custom:hover {
-            background-color: #111111;
-            color: #ffffff;
-        }
-
-        /* Card sản phẩm tối giản */
-        .card-custom {
-            border: none;
-            border-radius: 0;
-            background-color: #f8f9fa; /* Xám cực nhạt để nổi bật trên nền trắng */
-            transition: transform 0.2s;
-        }
-        .card-custom:hover {
-            transform: translateY(-5px);
-        }
-        
-        .navbar-brand {
-            font-size: 1.8rem;
-            letter-spacing: -1px; /* Khoảng cách chữ hẹp lại cho cảm giác mạnh mẽ */
-        }
-        
-        footer {
-            background-color: #111111;
-            color: #ffffff;
-        }
+        body { background-color: #ffffff; color: #111111; }
+        .navbar-brand { font-size: 1.8rem; letter-spacing: -1px; }
+        footer { background-color: #111111; color: #ffffff; padding: 20px 0; }
+        .btn-custom { background-color: #111111; color: #ffffff; border-radius: 4px; padding: 10px 24px; text-transform: uppercase; }
+        .btn-custom:hover { background-color: #333; color: #fff; }
     </style>
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-4 py-3">
-            <div class="container-fluid px-4">
-                <a class="navbar-brand text-custom fw-bold" asp-area="" asp-controller="Home" asp-action="Index">NIKE</a>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1 ms-4 fw-semibold text-uppercase" style="font-size: 0.9rem;">
-                        <li class="nav-item me-3"><a class="nav-link text-dark" asp-controller="Home" asp-action="Index">Trang chủ</a></li>
-                        <li class="nav-item me-3"><a class="nav-link text-dark" asp-controller="Products" asp-action="Index">Sản phẩm</a></li>
-                        <li class="nav-item"><a class="nav-link text-dark" asp-controller="Cart" asp-action="Index">Giỏ hàng</a></li>
+        <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top border-bottom">
+            <div class="container">
+                <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">NIKESHOP</a>
+                
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto align-items-center">
+                        <li class="nav-item"><a class="nav-link" asp-controller="Products" asp-action="Index">Sản phẩm</a></li>
+                        <li class="nav-item">
+                            <a class="nav-link position-relative" asp-controller="Cart" asp-action="Index">
+                                Giỏ hàng
+                                <span id="cart-badge" class="badge rounded-pill bg-danger" style="font-size: 0.6rem;">0</span>
+                            </a>
+                        </li>
+
+                        @* Admin link shown only to users in Admin role *@
+                        @if (User?.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item ms-3 d-flex align-items-center">
+                                <a class="nav-link text-danger fw-bold" asp-controller="Admin" asp-action="Dashboard">Admin Panel</a>
+                            </li>
+                        }
+
+                        <li class="nav-item ms-lg-3"><partial name="_LoginPartial" /></li>
                     </ul>
-                    <partial name="_LoginPartial" />
                 </div>
             </div>
         </nav>
     </header>
-    <div class="container min-vh-100">
+
+    <div class="container min-vh-100 mt-4">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
-    <footer class="mt-5 py-4 text-center">
+
+    <footer class="text-center mt-5">
         <div class="container">
-            <p class="mb-0 fw-bold">&copy; 2026 - NIKE SHOP</p>
+            <p class="mb-0 fw-bold">&copy; 2026 - NIKESHOP</p>
             <small class="text-secondary">Just Do It.</small>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

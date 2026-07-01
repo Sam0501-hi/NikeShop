@@ -33,10 +33,26 @@
             {
                 <div class="d-flex justify-content-between mb-3 align-items-center">
                     <div class="d-flex align-items-center">
-                        <img src="~/images/@item.Image" alt="@item.ProductName" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" onerror="this.src='https://via.placeholder.com/50'" />
+                        <img src="@(item.Image?.StartsWith("http") == true ? item.Image : Url.Content("~" + item.Image))" alt="@item.ProductName"
+                             style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" 
+                             onerror="this.src='https://via.placeholder.com/50'" />
                         <div class="ms-3">
                             <h6 class="mb-0 fw-bold">@item.ProductName</h6>
-                            <small class="text-muted">Size: @item.Size | SL: @item.Quantity</small>
+                            <small class="text-muted d-flex align-items-center">
+                                <span class="me-2">Size: @item.Size</span>
+                                <span class="me-2">SL: @item.Quantity</span>
+                                <span class="d-inline-flex align-items-center">
+                                    @if (!string.IsNullOrEmpty(item.Color))
+                                    {
+                                        <span class="rounded-circle border me-2" style="width:14px;height:14px;background-color:@item.Color;display:inline-block;vertical-align:middle;"></span>
+                                        <span>@item.Color</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Không có màu</span>
+                                    }
+                                </span>
+                            </small>
                         </div>
                     </div>
                     <span class="fw-bold">@item.Total.ToString("N0") đ</span>

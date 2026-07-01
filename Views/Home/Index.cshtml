@@ -13,8 +13,9 @@
     {
         <div class="col-md-6 mb-4">
             <div class="card card-custom h-100 p-3">
-                <img src="@(item.Image?.StartsWith("http") == true ? item.Image : Url.Content("~/images/" + item.Image))" class="img-fluid" alt="@item.ProductName" style="max-height: 400px; object-fit: cover;" onerror="this.src='https://via.placeholder.com/400x400'">
-                <div class="card-body text-center d-flex flex-column">
+<img src="@(item.Image?.StartsWith("http") == true ? item.Image : Url.Content("~" + item.Image))" 
+     class="img-fluid" alt="@item.ProductName" style="max-height: 400px; object-fit: cover;" 
+     onerror="this.src='https://via.placeholder.com/400x400'">                <div class="card-body text-center d-flex flex-column">
                     <h5 class="card-title fw-bold">@item.ProductName</h5>
                     <p class="text-danger fw-bold">@item.Price.ToString("N0") VNĐ</p>
                     <a asp-controller="Products" asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-custom mt-auto w-100">Xem chi tiết</a>

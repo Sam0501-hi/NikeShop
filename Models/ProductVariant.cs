@@ -15,6 +15,10 @@ namespace NikeShop.Models
         [StringLength(10)]
         public string Size { get; set; } = string.Empty;
 
+        [Required]
+        [StringLength(50)]
+        public string Color { get; set; } = string.Empty; // Thêm trường Color
+
         public int StockQuantity { get; set; }
 
         public bool IsAvailable => StockQuantity > 0;

@@ -1,0 +1,108 @@
+﻿@model NikeShop.Models.Product
+
+@{
+    ViewData["Title"] = "Chỉnh sửa sản phẩm";
+    var variantsList = Model.Variants?.ToList() ?? new List<NikeShop.Models.ProductVariant>();
+}
+
+<div class="container mt-4">
+    <h2>Chỉnh sửa sản phẩm</h2>
+
+    <form asp-action="EditProduct" method="post" enctype="multipart/form-data" id="productForm">
+        <input type="hidden" asp-for="ProductId" />
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label asp-for="ProductName" class="form-label">Tên sản phẩm</label>
+                    <input asp-for="ProductName" class="form-control" required />
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Price" class="form-label">Giá</label>
+                    <input asp-for="Price" type="number" class="form-control" required />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Danh mục</label>
+                    <select asp-for="CategoryId" asp-items="@(new SelectList(ViewBag.Categories, "CategoryId", "CategoryName"))" class="form-select"></select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Ảnh hiện tại</label><br />
+                    @if (!string.IsNullOrEmpty(Model.Image))
+                    {
+                        <img src="@Model.Image" width="100" class="rounded border mb-2" alt="Ảnh sản phẩm" />
+                    }
+                    else
+                    {
+                        <p class="text-muted">Chưa có ảnh</p>
+                    }
+                    <input type="file" name="imageFile" class="form-control" accept="image/*" />
+                    <small class="text-muted">Để trống nếu không muốn đổi ảnh</small>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <h5>Biến thể (Màu & Size)</h5>
+                <div id="variant-container">
+                    @for (int i = 0; i < variantsList.Count; i++)
+                    {
+                        <div class="row mb-2 border p-2 rounded variant-row">
+                            <input type="hidden" name="Variants[@i].ProductVariantId" value="@variantsList[i].ProductVariantId" />
+                            <div class="col-md-4">
+                                <input name="Variants[@i].Color" class="form-control" placeholder="Màu" value="@variantsList[i].Color" required />
+                            </div>
+                            <div class="col-md-3">
+                                <input name="Variants[@i].Size" class="form-control" placeholder="Size" value="@variantsList[i].Size" required />
+                            </div>
+                            <div class="col-md-3">
+                                <input name="Variants[@i].StockQuantity" type="number" class="form-control" placeholder="SL" value="@variantsList[i].StockQuantity" required />
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('.variant-row').remove()">X</button>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm mt-2" onclick="addVariant()">
+                    <i class="bi bi-plus"></i> Thêm biến thể
+                </button>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-success">Lưu thay đổi</button>
+            <a asp-action="Products" class="btn btn-secondary">Quay lại</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        // Bắt đầu đếm từ số biến thể đã có sẵn, tránh trùng index với dữ liệu cũ
+        let variantCount = @variantsList.Count;
+
+        function addVariant() {
+            let container = document.getElementById('variant-container');
+            let html = `
+                <div class="row mb-2 border p-2 rounded variant-row">
+                    <input type="hidden" name="Variants[${variantCount}].ProductVariantId" value="0" />
+                    <div class="col-md-4">
+                        <input name="Variants[${variantCount}].Color" class="form-control" placeholder="Màu" required />
+                    </div>
+                    <div class="col-md-3">
+                        <input name="Variants[${variantCount}].Size" class="form-control" placeholder="Size" required />
+                    </div>
+                    <div class="col-md-3">
+                        <input name="Variants[${variantCount}].StockQuantity" type="number" class="form-control" placeholder="SL" required />
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('.variant-row').remove()">X</button>
+                    </div>
+                </div>`;
+            container.insertAdjacentHTML('beforeend', html);
+            variantCount++;
+        }
+    </script>
+}
