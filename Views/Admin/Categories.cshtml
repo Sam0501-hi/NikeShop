@@ -1,0 +1,45 @@
+﻿@model IEnumerable<NikeShop.Models.Category>
+@{
+    ViewData["Title"] = "Quản lý Danh mục";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid mt-4">
+    <h2 class="text-uppercase fw-bold mb-4">Quản lý Danh mục</h2>
+
+    <div class="card p-3 border-2 border-dark rounded-0 mb-4">
+        <form asp-action="CreateCategory" method="post" class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <input type="text" name="categoryName" class="form-control rounded-0" placeholder="Nhập tên danh mục mới..." required />
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-dark rounded-0 w-100">THÊM MỚI</button>
+            </div>
+        </form>
+    </div>
+
+    <table class="table table-hover border">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Tên danh mục</th>
+                <th class="text-end">Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var cat in Model)
+            {
+                <tr>
+                    <td class="align-middle">@cat.CategoryId</td>
+                    <td class="align-middle">@cat.CategoryName</td>
+                    <td class="text-end">
+                        <form asp-action="DeleteCategory" method="post" onsubmit="return confirm('Bạn chắc chắn muốn xóa danh mục này?');">
+                            <input type="hidden" name="categoryId" value="@cat.CategoryId" />
+                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-0">Xóa</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

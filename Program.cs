@@ -1,94 +1,42 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using NikeShop.Data;
 using NikeShop.Models;
-//using NikeShop.Services;
+using NikeShop.Services; // Đảm bảo đã import namespace chứa EmailSender
 
 var builder = WebApplication.CreateBuilder(args);
 
-#region Database
-
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
+// 1. Thêm DB Context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-{
-    options.UseSqlServer(connectionString);
-});
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-#endregion
-
-#region Identity
-
-builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
-{
-    // Không yêu cầu xác thực Email
+// 2. Thêm Identity
+builder.Services.AddDefaultIdentity<ApplicationUser>(options => {
     options.SignIn.RequireConfirmedAccount = false;
-
-    // Cấu hình Password
     options.Password.RequireDigit = false;
-    options.Password.RequireLowercase = false;
-    options.Password.RequireUppercase = false;
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequiredLength = 6;
 })
 .AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
-#endregion
+builder.Services.AddTransient<IEmailSender, EmailSender>();
 
-#region MVC
-
+// 3. Đăng ký các dịch vụ MVC/Session
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
-
-#endregion
-
-#region Session
-
 builder.Services.AddDistributedMemoryCache();
-
-builder.Services.AddSession(options =>
-{
+builder.Services.AddSession(options => {
     options.IdleTimeout = TimeSpan.FromHours(2);
-
     options.Cookie.HttpOnly = true;
-
     options.Cookie.IsEssential = true;
 });
-
 builder.Services.AddHttpContextAccessor();
-
-#endregion
-
-#region Dependency Injection
-
-//builder.Services.AddScoped<CartService>();
-
-//builder.Services.AddScoped<OrderService>();
-
-#endregion
 
 var app = builder.Build();
 
-#region Seed Data
-
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-
-    // Bỏ comment dòng này để hàm tạo dữ liệu hoạt động
-    SeedData.Initialize(services);
-
-    // Dòng này cứ để comment, khi nào làm phân quyền Admin thì mở sau
-    // await IdentitySeed.SeedAdminAsync(services); 
-}
-
-#endregion
-
-
-
-#region Middleware
-
+// 4. Middleware Pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -96,27 +44,35 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
-
 app.UseRouting();
 
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseSession();
 
-app.UseAuthentication();
-
-app.UseAuthorization();
-
-#endregion
-
-#region Route
-
+// 5. Routes
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-
 app.MapRazorPages();
 
-#endregion
+// 6. Seed Data
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        SeedData.Initialize(services);
+        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+        await IdentitySeed.SeedRolesAndAdminAsync(userManager, roleManager);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Có lỗi xảy ra khi khởi tạo dữ liệu.");
+    }
+}
 
 app.Run();

@@ -75,5 +75,12 @@ namespace NikeShop.Controllers
             }
             return RedirectToAction("Index");
         }
+        [HttpGet]
+        public IActionResult GetCartCount()
+        {
+            var cart = GetCartItems(); // Hàm bạn đã có sẵn để lấy list giỏ hàng
+            int count = cart.Sum(c => c.Quantity);
+            return Json(new { count = count });
+        }
     }
 }
