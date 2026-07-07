@@ -17,6 +17,10 @@ namespace NikeShop.Controllers
         {
             // Lấy danh sách sản phẩm kèm theo danh mục
             var products = await _context.Products.Include(p => p.Category).ToListAsync();
+
+            // Lấy danh sách danh mục để hiển thị banner "Danh mục sản phẩm"
+            ViewBag.Categories = await _context.Categories.ToListAsync();
+
             return View(products);
         }
     }

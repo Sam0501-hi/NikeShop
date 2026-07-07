@@ -1,6 +1,19 @@
 ﻿@model IEnumerable<NikeShop.Models.Product>
 @{
     ViewData["Title"] = "Trang chủ";
+    var categories = ViewBag.Categories as List<NikeShop.Models.Category> ?? new List<NikeShop.Models.Category>();
+
+    // Ảnh mặc định cho từng danh mục nếu Category.Image chưa được set trong Admin
+    string GetCategoryImage(NikeShop.Models.Category c)
+    {
+        if (!string.IsNullOrWhiteSpace(c.Image)) return c.Image;
+        var name = c.CategoryName.ToLower();
+        if (name.Contains("giày")) return "/images/banner-giay.jpg";
+        if (name.Contains("áo")) return "/images/banner-ao.webp";
+        if (name.Contains("quần")) return "/images/banner-quan.avif";
+        if (name.Contains("balo") || name.Contains("túi")) return "/images/banner-balo.avif";
+        return "/images/ad.jpg";
+    }
 }
 
 <div class="text-center mb-5 mt-4">
@@ -8,19 +21,113 @@
     <p class="text-muted">Khám phá bộ sưu tập giày thể thao mới nhất từ Nike.</p>
 </div>
 
-<div class="row">
-    @foreach (var item in Model)
-    {
-        <div class="col-md-6 mb-4">
-            <div class="card card-custom h-100 p-3">
-<img src="@(item.Image?.StartsWith("http") == true ? item.Image : Url.Content("~" + item.Image))" 
-     class="img-fluid" alt="@item.ProductName" style="max-height: 400px; object-fit: cover;" 
-     onerror="this.src='https://via.placeholder.com/400x400'">                <div class="card-body text-center d-flex flex-column">
-                    <h5 class="card-title fw-bold">@item.ProductName</h5>
-                    <p class="text-danger fw-bold">@item.Price.ToString("N0") VNĐ</p>
-                    <a asp-controller="Products" asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-custom mt-auto w-100">Xem chi tiết</a>
-                </div>
+<!-- Banner quảng cáo -->
+<div class="container-fluid px-lg-5">
+    <div id="homeBannerCarousel" class="carousel slide mb-5" data-bs-ride="carousel" style="max-height:400px;">
+        <div class="carousel-inner rounded">
+            <div class="carousel-item active">
+                <img src="~/images/image.avif" class="d-block w-100 rounded" style="max-height:400px;width:100%;object-fit:contain;background:#f2f2f2;" alt="Banner 1" onerror="this.closest('.carousel-item').remove()">
+            </div>
+            <div class="carousel-item">
+                <img src="~/images/image (1).avif" class="d-block w-100 rounded" style="max-height:400px;width:100%;object-fit:contain;background:#f2f2f2;" alt="Banner 2" onerror="this.closest('.carousel-item').remove()">
+            </div>
+            <div class="carousel-item">
+                <img src="~/images/image (2).avif" class="d-block w-100 rounded" style="max-height:400px;width:100%;object-fit:contain;background:#f2f2f2;" alt="Banner 3" onerror="this.closest('.carousel-item').remove()">
             </div>
         </div>
-    }
+        <button class="carousel-control-prev" type="button" data-bs-target="#homeBannerCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#homeBannerCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        </button>
+    </div>
 </div>
+
+<!-- Danh mục sản phẩm -->
+@if (categories.Any())
+{
+    <div class="container-fluid px-lg-5 mt-5">
+        <h3 class="mb-4 fw-bold">Danh mục sản phẩm</h3>
+        <div class="row g-3">
+            @foreach (var cat in categories)
+            {
+                <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@cat.CategoryId" class="col-6 col-md-4 col-lg-2 text-decoration-none">
+                    <div class="category-card position-relative overflow-hidden rounded shadow-sm">
+                        <img src="@Url.Content(GetCategoryImage(cat))" class="w-100" style="height:250px;object-fit:cover;" alt="@cat.CategoryName"
+                             onerror="this.src='https://via.placeholder.com/300x250?text=No+Image'">
+                        <div class="category-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-end justify-content-center pb-3">
+                            <h5 class="text-white fw-bold text-center px-2">@cat.CategoryName</h5>
+                        </div>
+                    </div>
+                </a>
+            }
+        </div>
+    </div>
+}
+
+<!-- Danh sách sản phẩm -->
+<div class="container-fluid px-lg-5 mt-5">
+    <h3 class="mb-4 fw-bold text-center">Sản phẩm nổi bật</h3>
+    <div class="row g-4 justify-content-center">
+        @foreach (var item in Model)
+        {
+            <div class="col-6 col-md-4 col-lg-2">
+                <a class="text-decoration-none text-dark" asp-controller="Products" asp-action="Details" asp-route-id="@item.ProductId">
+                    <div class="card h-100 shadow-sm featured-product-card">
+                        <div class="featured-product-image">
+                            <img src="@(item.Image?.StartsWith("http") == true ? item.Image : Url.Content("~" + item.Image))"
+                                 class="card-img-top" alt="@item.ProductName"
+                                 onerror="this.src='https://via.placeholder.com/300x180?text=No+Image'">
+                        </div>
+                        <div class="card-body text-center">
+                            <h6 class="card-title mb-2">@item.ProductName</h6>
+                            <p class="mb-0 text-danger fw-bold">@item.Price.ToString("N0") VNĐ</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .category-card {
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+
+        .category-card:hover {
+            transform: translateY(-5px);
+        }
+
+    .category-overlay {
+        background: rgba(0, 0, 0, 0.4);
+        transition: background 0.3s ease;
+    }
+
+    .category-card:hover .category-overlay {
+        background: rgba(0, 0, 0, 0.6);
+    }
+
+    .featured-product-card {
+        border: none;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .featured-product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12) !important;
+        }
+
+    .featured-product-image {
+        height: 180px;
+        overflow: hidden;
+    }
+
+        .featured-product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+</style>
