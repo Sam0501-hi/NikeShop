@@ -4,38 +4,26 @@
     Layout = "_AdminLayout";
 }
 
-<div class="container-fluid mt-4">
-    <h2 class="text-uppercase fw-bold mb-4">Quản lý Danh mục</h2>
+<div class="container mt-4">
+    <h1>Danh mục</h1>
+    <a asp-controller="Admin" asp-action="CreateCategory" class="btn btn-primary mb-3">Thêm danh mục</a>
 
-    <div class="card p-3 border-2 border-dark rounded-0 mb-4">
-        <form asp-action="CreateCategory" method="post" class="row g-2 align-items-center">
-            <div class="col-md-4">
-                <input type="text" name="categoryName" class="form-control rounded-0" placeholder="Nhập tên danh mục mới..." required />
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-dark rounded-0 w-100">THÊM MỚI</button>
-            </div>
-        </form>
-    </div>
-
-    <table class="table table-hover border">
-        <thead class="table-dark">
+    <table class="table">
+        <thead>
             <tr>
-                <th>ID</th>
-                <th>Tên danh mục</th>
-                <th class="text-end">Hành động</th>
+                <th>Tên</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var cat in Model)
+            @foreach (var item in Model)
             {
                 <tr>
-                    <td class="align-middle">@cat.CategoryId</td>
-                    <td class="align-middle">@cat.CategoryName</td>
-                    <td class="text-end">
-                        <form asp-action="DeleteCategory" method="post" onsubmit="return confirm('Bạn chắc chắn muốn xóa danh mục này?');">
-                            <input type="hidden" name="categoryId" value="@cat.CategoryId" />
-                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-0">Xóa</button>
+                    <td>@item.CategoryName</td>
+                    <td>
+                        <a asp-controller="Admin" asp-action="EditCategory" asp-route-id="@item.CategoryId" class="btn btn-sm btn-warning">Sửa</a>
+                        <form asp-controller="Admin" asp-action="DeleteCategory" asp-route-id="@item.CategoryId" method="post" style="display:inline-block;" onsubmit="return confirm('Bạn có chắc muốn xóa?');">
+                            <button type="submit" class="btn btn-sm btn-danger">Xóa</button>
                         </form>
                     </td>
                 </tr>

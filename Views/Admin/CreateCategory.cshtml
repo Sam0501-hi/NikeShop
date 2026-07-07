@@ -1,0 +1,29 @@
+﻿@model NikeShop.Models.Category
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Thêm danh mục";
+}
+
+<div class="container mt-4">
+    <h1>Thêm danh mục</h1>
+
+    <form asp-controller="Admin" asp-action="CreateCategory" method="post">
+        @Html.AntiForgeryToken()
+        <div class="mb-3">
+            <label class="form-label">Tên danh mục</label>
+            <input asp-for="CategoryName" class="form-control" />
+            <span asp-validation-for="CategoryName" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Mô tả</label>
+            <textarea asp-for="Description" class="form-control"></textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Ảnh (đường dẫn)</label>
+            <input asp-for="Image" class="form-control" />
+        </div>
+        <button type="submit" class="btn btn-success">Tạo</button>
+        <a asp-controller="Admin" asp-action="Categories" class="btn btn-secondary">Hủy</a>
+    </form>
+</div>

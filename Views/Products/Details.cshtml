@@ -6,77 +6,378 @@
 
 @if (Model == null)
 {
-    <div class="alert alert-warning mt-5">Sản phẩm không tồn tại!</div>
+    <div class="alert alert-warning mt-5 text-center">Sản phẩm không tồn tại!</div>
 }
 else
 {
-    <div class="card card-custom p-4 mt-5 border-0">
+    <div class="container-fluid px-md-5 mt-4 mb-5 nike-font">
         <div class="row">
-            <div class="col-md-5">
-                <img src="@(Model.Image?.StartsWith("http") == true ? Model.Image : Url.Content("~" + Model.Image))"
-     class="img-fluid" alt="@Model.ProductName"
-     onerror="this.src='https://via.placeholder.com/500x500'" style="border-radius: 4px;">
+            <!-- Cột 1: Danh sách ảnh nhỏ (Thumbnails) - Ẩn trên mobile -->
+            <div class="col-1 d-none d-lg-block pe-0">
+                <div class="d-flex flex-column gap-2" id="thumbnailContainer">
+                    <!-- Ảnh nhỏ sẽ được JS render theo màu đang chọn -->
+                </div>
             </div>
 
-            <div class="col-md-7 ps-md-5">
-                <h2 class="fw-bold text-uppercase" style="letter-spacing: -1px;">@Model.ProductName</h2>
-                <p class="text-muted">Danh mục: @Model.Category?.CategoryName</p>
-                <h3 class="fw-bold my-3">@Model.Price.ToString("N0") VNĐ</h3>
-                <p class="mb-4">@Model.Description</p>
+            <!-- Cột 2: Ảnh sản phẩm chính -->
+            <div class="col-12 col-lg-7 ps-lg-2 pe-lg-4 mb-4 mb-lg-0">
+                <div class="main-image-container position-relative">
+                    <img id="mainProductImage" src=""
+                         class="img-fluid w-100 main-img" alt="@Model.ProductName"
+                         onerror="this.src='https://via.placeholder.com/800x800?text=No+Image'">
+
+                    <!-- Nút điều hướng ảo giống Nike -->
+                    <div class="image-nav-buttons d-none d-md-flex">
+                        <button class="nav-btn"><i class="bi bi-chevron-left"></i></button>
+                        <button class="nav-btn"><i class="bi bi-chevron-right"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cột 3: Thông tin sản phẩm, Size, Thêm vào giỏ -->
+            <div class="col-12 col-lg-4 ps-lg-4 mt-2">
+                <h1 class="product-title">@Model.ProductName</h1>
+                <h2 class="product-subtitle">@(Model.Category?.CategoryName ?? "Men's Shoes")</h2>
+                <div class="product-price mb-4">@Model.Price.ToString("N0")đ</div>
 
                 <form asp-controller="Cart" asp-action="AddToCart" method="post">
                     <input type="hidden" name="productId" value="@Model.ProductId" />
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Màu sắc:</label>
-                        <div class="btn-group d-flex flex-wrap" role="group" aria-label="Select Color">
+                    <!-- Form Ẩn chọn số lượng (Nike thường mặc định là 1 trên giao diện này) -->
+                    <input type="hidden" name="quantity" value="1" />
+
+                    <!-- Chọn Màu Sắc (Giả lập giống các box ảnh của Nike) -->
+                    <div class="mb-4">
+                        <div class="d-flex flex-wrap gap-2">
                             @{
                                 var colors = Model.Variants?.Where(v => v.StockQuantity > 0 && !string.IsNullOrEmpty(v.Color))
-                                                          .Select(v => v.Color)
-                                                          .Distinct()
-                                                          .ToList();
+                                                            .Select(v => v.Color)
+                                                            .Distinct()
+                                                            .ToList();
 
                                 if (colors != null && colors.Any())
                                 {
                                     for (int i = 0; i < colors.Count; i++)
                                     {
                                         var col = colors[i];
-                                        <input type="radio" class="btn-check" name="color" id="color_@i" value="@col" @(i == 0 ? "checked" : "") required />
-                                        <label class="btn btn-outline-dark m-1 text-uppercase" for="color_@i">@col</label>
+                                        <input type="radio" class="btn-check" name="color" id="color_@i" value="@col" @(i == 0 ? "checked" : "") required onchange="selectColor('@col')" />
+                                        <label class="color-select-box" for="color_@i">
+                                            <!-- Nếu có ảnh theo màu thì thay link src vào đây, hiện tại dùng màu text -->
+                                            <span>@col</span>
+                                        </label>
                                     }
                                 }
                                 else
                                 {
-                                    // Fallback to product-level Color property when no variant colors available
                                     <input type="hidden" name="color" value="@(Model.Color ?? String.Empty)" />
-                                    <div>
-                                        <span class="badge bg-dark p-2 px-3 text-uppercase">@Model.Color</span>
+                                    <div class="color-select-box active-color">
+                                        <span>@(string.IsNullOrEmpty(Model.Color) ? "Default" : Model.Color)</span>
                                     </div>
                                 }
                             }
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Chọn Size:</label>
-                        <div class="btn-group d-flex flex-wrap" role="group" aria-label="Select Size">
-                            @foreach (var variant in Model.Variants.Where(v => v.StockQuantity > 0))
+                    <!-- Chọn Size -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-end mb-3">
+                            <span class="fw-bold" style="font-size: 16px;">Select Size</span>
+                            <a href="#" class="text-secondary text-decoration-none" style="font-size: 16px;">Size Guide</a>
+                        </div>
+
+                        <div class="row row-cols-3 g-2" id="sizeContainer">
+                            @if (Model.Variants != null && Model.Variants.Any(v => v.StockQuantity > 0))
                             {
-                                <input type="radio" class="btn-check" name="size" id="size_@variant.Size" value="@variant.Size" required>
-                                <label class="btn btn-outline-dark m-1" for="size_@variant.Size">@variant.Size</label>
+                                var availableSizes = Model.Variants.Where(v => v.StockQuantity > 0).ToList();
+                                for (int i = 0; i < availableSizes.Count; i++)
+                                {
+                                    var variant = availableSizes[i];
+                                    <div class="col size-option" data-color="@variant.Color">
+                                        <input type="radio" class="btn-check size-check" name="size" id="size_@i" value="@variant.Size" @(i == 0 ? "checked" : "") required>
+                                        <label class="btn w-100 size-btn" for="size_@i">EU @variant.Size</label>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="col-12 text-danger">Sold Out (Hết hàng)</div>
                             }
                         </div>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="form-label fw-bold">Số lượng:</label>
-                        <input type="number" name="quantity" value="1" min="1" max="10"
-                               class="form-control w-25" style="border-radius: 4px;" />
+                    <!-- Nút Thêm vào giỏ -->
+                    <div class="mt-5">
+                        <button type="submit" class="btn w-100 add-to-bag-btn" @(Model.Variants == null || !Model.Variants.Any(v => v.StockQuantity > 0) ? "disabled" : "")>
+                            Add to Bag
+                        </button>
+
+                        <!-- Nút yêu thích (Tùy chọn hiển thị giống Nike) -->
+                        <button type="button" class="btn w-100 favorite-btn mt-2">
+                            Favorite <i class="bi bi-heart ms-2"></i>
+                        </button>
                     </div>
 
-                    <button type="submit" class="btn btn-custom btn-lg w-100">Thêm vào giỏ hàng</button>
+                    <div class="mt-5 pt-4 border-top">
+                        <p style="font-size: 16px; line-height: 1.7;">
+                            @(string.IsNullOrEmpty(Model.Description) ? "Radiate in the classic that never goes out of style." : Model.Description)
+                        </p>
+                    </div>
                 </form>
             </div>
         </div>
     </div>
 }
+
+<style>
+    /* Tổng quan Font chữ giống Nike */
+    .nike-font {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        color: #111;
+    }
+
+    /* Thumbnail dọc bên trái */
+    .thumbnail-box {
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
+        overflow: hidden;
+        cursor: pointer;
+        opacity: 0.7;
+        background-color: #f6f6f6;
+    }
+
+        .thumbnail-box:hover {
+            opacity: 1;
+        }
+
+        .thumbnail-box.active-thumb {
+            opacity: 1;
+            border: 1px solid #111;
+        }
+
+        .thumbnail-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            mix-blend-mode: multiply;
+        }
+
+    /* Ảnh chính giữa */
+    .main-image-container {
+        background-color: #f6f6f6;
+        border-radius: 12px;
+        padding: 20px;
+        height: 100%;
+        min-height: 500px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .main-img {
+        mix-blend-mode: darken;
+        object-fit: contain;
+        max-height: 600px;
+    }
+
+    /* Nút điều hướng ảnh ảo (Góc phải dưới) */
+    .image-nav-buttons {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        gap: 10px;
+    }
+
+    .nav-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: none;
+        background-color: #fff;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+        .nav-btn:hover {
+            background-color: #e5e5e5;
+        }
+
+    /* Text thông tin SP */
+    .product-title {
+        font-size: 28px;
+        font-weight: 500;
+        margin-bottom: 4px;
+        letter-spacing: -0.5px;
+    }
+
+    .product-subtitle {
+        font-size: 16px;
+        font-weight: 500;
+        color: #111;
+        margin-bottom: 16px;
+    }
+
+    .product-price {
+        font-size: 16px;
+        font-weight: 500;
+        margin-bottom: 30px;
+    }
+
+    /* Nút chọn Màu Sắc */
+    .color-select-box {
+        width: 70px;
+        height: 70px;
+        border: 1px solid #e5e5e5;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        background-color: #f6f6f6;
+        font-size: 12px;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+        .color-select-box:hover {
+            border-color: #111;
+        }
+
+    .btn-check:checked + .color-select-box, .active-color {
+        border-color: #111;
+        box-shadow: inset 0 0 0 1px #111;
+    }
+
+    /* Nút chọn Size (3 cột) */
+    .size-btn {
+        background-color: #fff;
+        border: 1px solid #e5e5e5;
+        border-radius: 4px;
+        color: #111;
+        padding: 12px 0;
+        font-size: 16px;
+        transition: all 0.1s ease;
+    }
+
+        .size-btn:hover {
+            border-color: #111;
+        }
+
+    .size-check:checked + .size-btn {
+        border-color: #111;
+        box-shadow: inset 0 0 0 1px #111; /* Hiệu ứng viền đen đậm hơn khi được chọn */
+    }
+
+    /* Nút Thêm vào giỏ hàng & Yêu thích */
+    .add-to-bag-btn {
+        background-color: #111;
+        color: #fff;
+        border-radius: 30px; /* Bo góc tròn giống pill */
+        padding: 18px 24px;
+        font-size: 16px;
+        font-weight: 500;
+        transition: background-color 0.2s;
+    }
+
+        .add-to-bag-btn:hover {
+            background-color: #333;
+            color: #fff;
+        }
+
+</style>
+
+<!-- Để sử dụng icon <i class="bi bi-chevron-left"></i> bạn cần chèn CDN của Bootstrap Icons vào _Layout.cshtml nếu chưa có -->
+<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"> -->
+@{
+    var imagesByColor = Model.Images != null
+        ? Model.Images.Where(i => !string.IsNullOrWhiteSpace(i.Color))
+            .GroupBy(i => i.Color!)
+            .ToDictionary(g => g.Key, g => g.Select(i => i.ImagePath).ToList())
+        : new Dictionary<string, List<string>>();
+
+    var allImages = Model.Images != null && Model.Images.Any()
+        ? Model.Images.Select(i => i.ImagePath).ToList()
+        : (string.IsNullOrEmpty(Model.Image) ? new List<string> { "/images/no-image.png" } : new List<string> { Model.Image! });
+
+    var jsonOptions = new System.Text.Json.JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+    var imagesByColorJson = System.Text.Json.JsonSerializer.Serialize(imagesByColor, jsonOptions);
+    var allImagesJson = System.Text.Json.JsonSerializer.Serialize(allImages, jsonOptions);
+}
+
+<script>
+    const imagesByColor = @Html.Raw(imagesByColorJson);
+    const allImages = @Html.Raw(allImagesJson);
+
+    function resolveUrl(path) {
+        if (!path) return '/images/no-image.png';
+        return path.startsWith('/') ? path : '/' + path;
+    }
+
+    function renderGallery(images) {
+        const list = (images && images.length > 0) ? images : allImages;
+        const thumbContainer = document.getElementById('thumbnailContainer');
+        const mainImg = document.getElementById('mainProductImage');
+        if (!thumbContainer || !mainImg) return;
+
+        thumbContainer.innerHTML = '';
+        list.forEach(function (img, i) {
+            const div = document.createElement('div');
+            div.className = 'thumbnail-box' + (i === 0 ? ' active-thumb' : '');
+            div.onclick = function () { changeMainImage(img, div); };
+            const imageEl = document.createElement('img');
+            imageEl.src = resolveUrl(img);
+            imageEl.alt = 'Thumb ' + i;
+            div.appendChild(imageEl);
+            thumbContainer.appendChild(div);
+        });
+
+        mainImg.src = resolveUrl(list[0]);
+    }
+
+    function changeMainImage(path, thumbEl) {
+        const img = document.getElementById('mainProductImage');
+        if (!img) return;
+        img.src = resolveUrl(path);
+        document.querySelectorAll('.thumbnail-box').forEach(el => el.classList.remove('active-thumb'));
+        if (thumbEl) thumbEl.classList.add('active-thumb');
+    }
+
+    function selectColor(color) {
+        renderGallery(imagesByColor[color]);
+        filterSizesByColor(color);
+    }
+
+    function filterSizesByColor(color) {
+        const options = document.querySelectorAll('.size-option');
+        let firstVisibleSet = false;
+        options.forEach(function (opt) {
+            const optColor = opt.getAttribute('data-color');
+            const visible = !optColor || optColor === color;
+            opt.style.display = visible ? '' : 'none';
+            const input = opt.querySelector('input[type=radio]');
+            if (visible && !firstVisibleSet) {
+                input.checked = true;
+                firstVisibleSet = true;
+            } else if (!visible) {
+                input.checked = false;
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const checkedColor = document.querySelector('input[name="color"]:checked');
+        const initialColor = checkedColor ? checkedColor.value : null;
+
+        if (initialColor && imagesByColor[initialColor]) {
+            renderGallery(imagesByColor[initialColor]);
+        } else {
+            renderGallery(allImages);
+        }
+        if (initialColor) {
+            filterSizesByColor(initialColor);
+        }
+    });
+</script>

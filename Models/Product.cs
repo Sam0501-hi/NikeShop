@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NikeShop.Models
@@ -37,6 +38,7 @@ namespace NikeShop.Models
         // Foreign Key
         //========================
 
+        [Range(1, int.MaxValue, ErrorMessage = "Please select a valid category.")]
         public int CategoryId { get; set; }
 
         public Category? Category { get; set; }
@@ -46,9 +48,17 @@ namespace NikeShop.Models
         //========================
 
         public ICollection<ProductVariant> Variants { get; set; }
-            = new List<ProductVariant>();
 
         public ICollection<OrderDetail> OrderDetails { get; set; }
-            = new List<OrderDetail>();
+
+        // New: support multiple images per product
+        public ICollection<ProductImage> Images { get; set; }
+
+        public Product()
+        {
+            Variants = new List<ProductVariant>();
+            OrderDetails = new List<OrderDetail>();
+            Images = new List<ProductImage>();
+        }
     }
 }

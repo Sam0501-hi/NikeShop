@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using System;
 using Microsoft.EntityFrameworkCore;
 using NikeShop.Data;
 using NikeShop.Models;
@@ -9,7 +10,15 @@ var builder = WebApplication.CreateBuilder(args);
 
 // 1. Thêm DB Context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sqlServerOptions => sqlServerOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
+            errorNumbersToAdd: null
+        )
+    )
+);
 
 // 2. Thêm Identity
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => {
@@ -63,6 +72,10 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     try
     {
+        // Ensure database schema is up-to-date (apply pending migrations)
+        var db = services.GetRequiredService<ApplicationDbContext>();
+        db.Database.Migrate();
+
         SeedData.Initialize(services);
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();

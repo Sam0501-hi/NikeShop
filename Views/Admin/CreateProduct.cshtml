@@ -1,70 +1,83 @@
 ﻿@model NikeShop.Models.Product
 
 @{
-    ViewData["Title"] = "Thêm sản phẩm mới";
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Create Product";
 }
 
 <div class="container mt-4">
-    <h2>Thêm sản phẩm mới</h2>
-    <form asp-action="CreateProduct" method="post" enctype="multipart/form-data" id="productForm">
-        <div class="row">
-            <div class="col-md-6">
-                <div class="mb-3">
-                    <label asp-for="ProductName" class="form-label">Tên sản phẩm</label>
-                    <input asp-for="ProductName" class="form-control" required />
-                </div>
-                <div class="mb-3">
-                    <label asp-for="Price" class="form-label">Giá</label>
-                    <input asp-for="Price" type="number" class="form-control" required />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Danh mục</label>
-                    <select asp-for="CategoryId" asp-items="@(new SelectList(ViewBag.Categories, "CategoryId", "CategoryName"))" class="form-select"></select>
-                </div>
-                <div class="mb-3">
-                <label class="form-label">Ảnh sản phẩm</label>
-                <input type="file" name="imageFile" class="form-control" accept="image/*" />
-            </div>
-            </div>
+    <h1>Thêm sản phẩm</h1>
 
-            <div class="col-md-6">
-                <h5>Biến thể (Màu & Size)</h5>
-                <div id="variant-container"></div>
-                <button type="button" class="btn btn-outline-primary btn-sm mt-2" onclick="addVariant()">
-                    <i class="bi bi-plus"></i> Thêm biến thể
-                </button>
-            </div>
+    <form asp-controller="Admin" asp-action="CreateProduct" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <div class="mb-3">
+            <label class="form-label">Danh mục</label>
+            <select asp-for="CategoryId" class="form-control" name="CategoryId">
+                <option value="0">-- Chọn danh mục --</option>
+                @foreach (var c in (IEnumerable<NikeShop.Models.Category>)ViewData["Categories"])
+                {
+                    <option value="@c.CategoryId">@c.CategoryName</option>
+                }
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Tên sản phẩm</label>
+            <input asp-for="ProductName" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Giá</label>
+            <input asp-for="Price" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Ảnh chung (không theo màu cụ thể)</label>
+            <input type="file" name="images" multiple class="form-control" accept="image/*" />
         </div>
 
-        <div class="mt-4">
-            <button type="submit" class="btn btn-success">Lưu sản phẩm</button>
-            <a asp-action="Products" class="btn btn-secondary">Quay lại</a>
+        <div class="mb-3">
+            <label class="form-label fw-bold">Ảnh theo từng màu</label>
+            <div id="image-group-container"></div>
+            <button type="button" class="btn btn-outline-primary btn-sm mt-2" onclick="addImageGroup()">+ Thêm màu và ảnh</button>
         </div>
+
+        <div class="mb-3">
+            <label class="form-label">Màu sắc (phân tách bằng dấu phẩy)</label>
+            <input type="text" name="colorsCsv" class="form-control" placeholder="Ví dụ: Red, Blue, Black" />
+            <div class="form-text">Lưu ý: nên nhập trùng tên màu với phần "Ảnh theo từng màu" ở trên để trang chi tiết hiển thị đúng ảnh khi khách chọn màu.</div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Size (phân tách bằng dấu phẩy)</label>
+            <input type="text" name="sizesCsv" class="form-control" placeholder="Ví dụ: 38, 39, 40" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Mô tả</label>
+            <textarea asp-for="Description" class="form-control"></textarea>
+        </div>
+        <button type="submit" class="btn btn-success">Tạo</button>
     </form>
 </div>
 
 @section Scripts {
     <script>
-        let variantCount = 0;
-        function addVariant() {
-            let container = document.getElementById('variant-container');
-            let html = `
-                <div class="row mb-2 border p-2 rounded variant-row">
+        let imageGroupCount = 0;
+
+        function addImageGroup() {
+            const container = document.getElementById('image-group-container');
+            const idx = imageGroupCount;
+            const html = `
+                <div class="row mb-2 border p-2 rounded image-group-row">
                     <div class="col-md-4">
-                        <input name="variants[${variantCount}].Color" class="form-control" placeholder="Màu" required />
+                        <input type="text" name="imageGroups[${idx}].Color" class="form-control" placeholder="Tên màu (VD: Đen)" required />
                     </div>
-                    <div class="col-md-3">
-                        <input name="variants[${variantCount}].Size" class="form-control" placeholder="Size" required />
+                    <div class="col-md-7">
+                        <input type="file" name="imageGroups[${idx}].Files" multiple class="form-control" accept="image/*" required />
                     </div>
-                    <div class="col-md-3">
-                        <input name="variants[${variantCount}].StockQuantity" type="number" class="form-control" placeholder="SL" required />
-                    </div>
-                    <div class="col-md-2">
-                        <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove()">X</button>
+                    <div class="col-md-1">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('.image-group-row').remove()">X</button>
                     </div>
                 </div>`;
             container.insertAdjacentHTML('beforeend', html);
-            variantCount++;
+            imageGroupCount++;
         }
     </script>
 }

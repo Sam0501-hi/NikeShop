@@ -1,48 +1,86 @@
 ﻿@model NikeShop.Models.Product
 
 @{
-    ViewData["Title"] = "Chỉnh sửa sản phẩm";
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Edit Product";
     var variantsList = Model.Variants?.ToList() ?? new List<NikeShop.Models.ProductVariant>();
 }
 
 <div class="container mt-4">
-    <h2>Chỉnh sửa sản phẩm</h2>
+    <h1>Sửa sản phẩm</h1>
 
-    <form asp-action="EditProduct" method="post" enctype="multipart/form-data" id="productForm">
+    <form asp-controller="Admin" asp-action="EditProduct" method="post" enctype="multipart/form-data" id="productForm">
         <input type="hidden" asp-for="ProductId" />
 
+        <div class="mb-3">
+            <label class="form-label">Tên sản phẩm</label>
+            <input asp-for="ProductName" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Giá</label>
+            <input asp-for="Price" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label fw-bold">Ảnh hiện có</label>
+            @{
+                var imageGroupsExisting = (Model.Images ?? new List<NikeShop.Models.ProductImage>())
+                    .GroupBy(im => string.IsNullOrWhiteSpace(im.Color) ? "(Ảnh chung)" : im.Color);
+            }
+            @if (!imageGroupsExisting.Any())
+            {
+                <div class="text-muted">Chưa có ảnh nào.</div>
+            }
+            else
+            {
+                foreach (var grp in imageGroupsExisting)
+                {
+                    <div class="mb-2">
+                        <div class="fw-bold small mb-1">@grp.Key</div>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var im in grp)
+                            {
+                                <div class="position-relative" style="width:80px;">
+                                    <img src="@Url.Content(im.ImagePath.StartsWith("/") ? im.ImagePath : "~/" + im.ImagePath.TrimStart('/'))" style="width:80px;height:80px;object-fit:cover;" class="rounded border" />
+                                    <form asp-controller="Admin" asp-action="DeleteProductImage" method="post" class="position-absolute top-0 end-0">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="imageId" value="@im.ProductImageId" />
+                                        <input type="hidden" name="productId" value="@Model.ProductId" />
+                                        <button type="submit" class="btn btn-danger btn-sm" style="padding:0 5px;line-height:1.4;" title="Xóa ảnh">×</button>
+                                    </form>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Thêm ảnh chung (không theo màu cụ thể)</label>
+            <input type="file" name="images" multiple class="form-control" accept="image/*" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Thêm ảnh theo từng màu</label>
+            <div id="image-group-container"></div>
+            <button type="button" class="btn btn-outline-primary btn-sm mt-2" onclick="addImageGroup()">+ Thêm màu và ảnh</button>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Màu sắc mới (phân tách bằng dấu phẩy, nếu muốn thêm biến thể mới)</label>
+            <input type="text" name="colorsCsv" class="form-control" placeholder="Ví dụ: Red, Blue, Black" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Size (phân tách bằng dấu phẩy)</label>
+            <input type="text" name="sizesCsv" class="form-control" placeholder="Ví dụ: 38, 39, 40" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Mô tả</label>
+            <textarea asp-for="Description" class="form-control"></textarea>
+        </div>
+
         <div class="row">
-            <div class="col-md-6">
-                <div class="mb-3">
-                    <label asp-for="ProductName" class="form-label">Tên sản phẩm</label>
-                    <input asp-for="ProductName" class="form-control" required />
-                </div>
-
-                <div class="mb-3">
-                    <label asp-for="Price" class="form-label">Giá</label>
-                    <input asp-for="Price" type="number" class="form-control" required />
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Danh mục</label>
-                    <select asp-for="CategoryId" asp-items="@(new SelectList(ViewBag.Categories, "CategoryId", "CategoryName"))" class="form-select"></select>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Ảnh hiện tại</label><br />
-                    @if (!string.IsNullOrEmpty(Model.Image))
-                    {
-                        <img src="@Model.Image" width="100" class="rounded border mb-2" alt="Ảnh sản phẩm" />
-                    }
-                    else
-                    {
-                        <p class="text-muted">Chưa có ảnh</p>
-                    }
-                    <input type="file" name="imageFile" class="form-control" accept="image/*" />
-                    <small class="text-muted">Để trống nếu không muốn đổi ảnh</small>
-                </div>
-            </div>
-
             <div class="col-md-6">
                 <h5>Biến thể (Màu & Size)</h5>
                 <div id="variant-container">
@@ -80,6 +118,27 @@
 
 @section Scripts {
     <script>
+        let imageGroupCount = 0;
+
+        function addImageGroup() {
+            const container = document.getElementById('image-group-container');
+            const idx = imageGroupCount;
+            const html = `
+                <div class="row mb-2 border p-2 rounded image-group-row">
+                    <div class="col-md-4">
+                        <input type="text" name="imageGroups[${idx}].Color" class="form-control" placeholder="Tên màu (VD: Đen)" required />
+                    </div>
+                    <div class="col-md-7">
+                        <input type="file" name="imageGroups[${idx}].Files" multiple class="form-control" accept="image/*" required />
+                    </div>
+                    <div class="col-md-1">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('.image-group-row').remove()">X</button>
+                    </div>
+                </div>`;
+            container.insertAdjacentHTML('beforeend', html);
+            imageGroupCount++;
+        }
+
         // Bắt đầu đếm từ số biến thể đã có sẵn, tránh trùng index với dữ liệu cũ
         let variantCount = @variantsList.Count;
 

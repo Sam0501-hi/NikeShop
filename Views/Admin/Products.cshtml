@@ -1,24 +1,24 @@
 ﻿@model IEnumerable<NikeShop.Models.Product>
 
 @{
-    ViewData["Title"] = "Quản lý sản phẩm";
     Layout = "_AdminLayout";
+    ViewData["Title"] = "Danh sách sản phẩm";
 }
 
-<div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Danh sách sản phẩm</h2>
-        <a asp-action="CreateProduct" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Thêm sản phẩm mới</a>
+<div class="container mt-4">
+    <h1>Danh sách sản phẩm</h1>
+
+    <div class="mb-3">
+        <a asp-controller="Admin" asp-action="CreateProduct" class="btn btn-primary">Thêm sản phẩm</a>
     </div>
 
-    <table class="table table-hover align-middle border">
-        <thead class="table-dark">
+    <table class="table table-striped">
+        <thead>
             <tr>
                 <th>Ảnh</th>
-                <th>Tên sản phẩm</th>
-                <th>Danh mục</th>
+                <th>Tên</th>
                 <th>Giá</th>
-                <th>Biến thể (Màu/Size)</th>
+                <th>Danh mục</th>
                 <th>Hành động</th>
             </tr>
         </thead>
@@ -26,32 +26,21 @@
             @foreach (var item in Model)
             {
                 <tr>
-                    <td><img src="@item.Image" width="60" class="rounded border" alt="img" /></td>
-                    <td class="fw-bold">@item.ProductName</td>
-                    <td><span class="badge bg-info">@item.Category?.CategoryName</span></td>
-                    <td class="text-danger fw-bold">@item.Price.ToString("N0") VNĐ</td>
                     <td>
-                        @if (item.Variants != null && item.Variants.Any())
-                        {
-                            foreach (var v in item.Variants)
-                            {
-                                <span class="badge bg-secondary">@v.Color - Size @v.Size (@v.StockQuantity)</span>
-                            }
-                        }
-                        else
-                        {
-                            <span class="text-muted">Chưa có biến thể</span>
-                        }
+                        @{ var img = item.Images != null && item.Images.Any() ? item.Images.First().ImagePath : item.Image; }
+                        <img src="@Url.Content(img.StartsWith("/") ? img : "~/" + img.TrimStart('/'))" alt="thumb" style="width:60px;height:60px;object-fit:cover;" />
                     </td>
-                  <td>
-    <a asp-action="EditProduct" asp-route-id="@item.ProductId" class="btn btn-sm btn-outline-warning me-2">
-        Sửa
-    </a>
-    
-    <form asp-action="DeleteProduct" asp-route-productId="@item.ProductId" method="post" class="d-inline" onsubmit="return confirm('Bạn chắc chắn muốn xóa?');">
-        <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
-    </form>
-</td>
+                    <td>@item.ProductName</td>
+                    <td>@item.Price.ToString("N0")đ</td>
+                    <td>@item.Category?.CategoryName</td>
+                    <td>
+                        <a asp-controller="Admin" asp-action="EditProduct" asp-route-id="@item.ProductId" class="btn btn-sm btn-warning">Sửa</a>
+                        <form asp-controller="Admin" asp-action="DeleteProduct" asp-route-id="@item.ProductId" method="post" style="display:inline-block;" onsubmit="return confirm('Bạn có chắc muốn xóa?');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-danger">Xóa</button>
+                        </form>
+                        <a asp-controller="Products" asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-sm btn-info">Xem</a>
+                    </td>
                 </tr>
             }
         </tbody>

@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using NikeShop.Data;
+using NikeShop.Data; // Thay đổi theo namespace chứa ApplicationDbContext của bạn
+using NikeShop.Models;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace NikeShop.Controllers
 {
@@ -13,35 +16,52 @@ namespace NikeShop.Controllers
             _context = context;
         }
 
-        // GET: Hiển thị danh sách sản phẩm (có hỗ trợ lọc theo danh mục)
+        // GET: Products?categoryId=1
         public async Task<IActionResult> Index(int? categoryId)
         {
-            // Lấy danh sách danh mục để truyền ra View (hiển thị menu lọc)
+            // 1. Lấy danh sách tất cả danh mục để hiển thị bên Sidebar (Cột trái)
             ViewBag.Categories = await _context.Categories.ToListAsync();
 
-            var products = _context.Products.Include(p => p.Category).AsQueryable();
+            // 2. Lưu lại ID danh mục hiện tại để highlight bên View
+            ViewBag.CurrentCategoryId = categoryId;
 
+            // 3. Khởi tạo câu truy vấn lấy sản phẩm
+            var productsQuery = _context.Products.Include(p => p.Category).AsQueryable();
+
+            // 4. Nếu người dùng có bấm vào 1 danh mục cụ thể (categoryId có giá trị)
             if (categoryId.HasValue)
             {
-                products = products.Where(p => p.CategoryId == categoryId.Value);
+                productsQuery = productsQuery.Where(p => p.CategoryId == categoryId.Value);
             }
 
-            return View(await products.ToListAsync());
+            // 5. Trả danh sách sản phẩm đã lọc về View
+            var products = await productsQuery.ToListAsync();
+            return View(products);
         }
 
-        // GET: Xem chi tiết một đôi giày
-        public async Task<IActionResult> Details(int id)
+        // GET: Products/Details/5
+        public async Task<IActionResult> Details(int? id)
         {
+            // Kiểm tra nếu không có id truyền vào
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            // Truy vấn lấy sản phẩm theo ID, kết hợp (Include) thêm thông tin của Category để hiển thị tên danh mục
             var product = await _context.Products
                 .Include(p => p.Category)
-                .Include(p => p.Variants) // Kéo theo size và số lượng tồn kho
+                .Include(p => p.Images)
+                .Include(p => p.Variants)
                 .FirstOrDefaultAsync(m => m.ProductId == id);
 
+            // Kiểm tra nếu không tìm thấy sản phẩm trong Database
             if (product == null)
             {
                 return NotFound();
             }
 
+            // Trả dữ liệu sản phẩm về cho View hiển thị
             return View(product);
         }
     }

@@ -4,31 +4,27 @@
     Layout = "_AdminLayout";
 }
 
-<div class="container-fluid mt-4">
-    <h2 class="text-uppercase fw-bold mb-4">Bảng điều khiển</h2>
+<h1 class="display-4">Bảng điều khiển</h1>
 
-    <div class="row g-4">
-        <div class="col-md-4">
-            <div class="card p-4 border-2 border-dark rounded-0 h-100">
-                <h6 class="text-muted text-uppercase small">Đơn hàng hôm nay</h6>
-                <h2 class="fw-bold mt-2">@Model.TotalOrdersToday</h2>
-                <a asp-controller="Admin" asp-action="Orders" class="text-dark small">Xem chi tiết &rarr;</a>
-            </div>
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="p-3 border">
+            <h6>Đơn hàng hôm nay</h6>
+            <h2>@Model.TotalOrdersToday</h2>
+            <a href="@Url.Action("Orders", "Admin")">Xem chi tiết →</a>
         </div>
-        
-        <div class="col-md-4">
-            <div class="card p-4 border-2 border-dark rounded-0 h-100">
-                <h6 class="text-muted text-uppercase small">Doanh thu tháng</h6>
-                <h2 class="fw-bold mt-2">@Model.TotalRevenueThisMonth.ToString("N0") đ</h2>
-            </div>
+    </div>
+    <div class="col-md-4">
+        <div class="p-3 border">
+            <h6>Doanh thu tháng</h6>
+            <h2>@Model.TotalRevenueThisMonth.ToString("N0") đ</h2>
         </div>
-
-        <div class="col-md-4">
-            <div class="card p-4 border-2 border-dark rounded-0 h-100 @(Model.LowStockProductsCount > 0 ? "bg-light" : "")">
-                <h6 class="text-muted text-uppercase small">Sản phẩm sắp hết hàng</h6>
-                <h2 class="fw-bold text-danger mt-2">@Model.LowStockProductsCount</h2>
-                <a asp-controller="Admin" asp-action="Products" class="text-danger small">Cần bổ sung kho &rarr;</a>
-            </div>
+    </div>
+    <div class="col-md-4">
+        <div class="p-3 border">
+            <h6>Sản phẩm sắp hết hàng</h6>
+            <h2>@Model.LowStockProductsCount</h2>
+            <a href="@Url.Action("StockManagement", "Admin")" class="text-danger">Cần bổ sung kho →</a>
         </div>
     </div>
 </div>
